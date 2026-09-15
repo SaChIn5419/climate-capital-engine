@@ -85,13 +85,8 @@ export default function Dashboard() {
           },
           lossReal: {
             type: "vector",
-            url:
-              "pmtiles://" +
-              window.location.origin +
-              (window.location.pathname.startsWith("/climate-capital-engine")
-                ? "/climate-capital-engine"
-                : "") +
-              "/data/loss_real.pmtiles",
+            // dev: /data/... , prod Pages: /climate-capital-engine/data/...
+            url: "pmtiles://" + window.location.origin + "/data/loss_real.pmtiles",
             attribution: "© IBTrACS buffer 50km → 7275 exposures → PMTiles 1973 tiles",
           },
         },
