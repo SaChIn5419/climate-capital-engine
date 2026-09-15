@@ -1,0 +1,5 @@
+step,loss_cr,cet1,label
+Base,0,15.0,CET1 15.00%
+Transition (NGFS GCAM 101$),3956.8,11.04,Transition -3.96pp
+Physical (IBTrACS 5% gross),2525.9,8.52,Physical -2.53pp
+Combined,6482.7,8.52,Combined 8.52%
