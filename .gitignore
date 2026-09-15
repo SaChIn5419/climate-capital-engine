@@ -28,3 +28,4 @@ web/dist/
 .env.*
 *.key
 *.pem
+# raw stays local — serious build keeps 26MB IBTrACS NI CSV local
