@@ -60,11 +60,20 @@ const colors: Record<string, string> = {
 
 export default function Dashboard() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const [activeSector, setActiveSector] = useState<string>("Power");
   const [cctsSupply, setCctsSupply] = useState(55);
   const [cctsDemand, setCctsDemand] = useState(68);
   const [cctsAbatement, setCctsAbatement] = useState(45);
-  const [cctsScenarios, setCctsScenarios] = useState(1000);
+  const sectorCenters: Record<string, [number, number]> = {
+    Power: [78, 22],
+    Steel: [80, 20],
+    Cement: [75, 21],
+    Transport: [77, 19],
+    "Real Estate": [72.8, 19.1],
+    "Oil & Gas": [70, 22],
+    Other: [76, 21],
+  };
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -98,7 +107,7 @@ export default function Dashboard() {
             source: "lossReal",
             "source-layer": "loss",
             paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 2, 10, 6],
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 5, 10, 12],
               "circle-color": [
                 "match",
                 ["get", "sector"],
@@ -116,8 +125,8 @@ export default function Dashboard() {
                 "#14b8a6",
                 /* default Other */ "#a78bfa",
               ],
-              "circle-opacity": 0.75,
-              "circle-stroke-width": 1,
+              "circle-opacity": 0.85,
+              "circle-stroke-width": 2,
               "circle-stroke-color": "#fff",
             },
           },
@@ -127,6 +136,7 @@ export default function Dashboard() {
       zoom: 5.2,
     });
     map.addControl(new maplibregl.NavigationControl(), "top-right");
+    mapInstanceRef.current = map;
     map.on("click", "lossReal", (e) => {
       const f = e.features?.[0];
       if (!f) return;
@@ -137,6 +147,12 @@ export default function Dashboard() {
         )
         .addTo(map);
       setActiveSector(f.properties.sector);
+    });
+    map.on("mouseenter", "lossReal", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+    map.on("mouseleave", "lossReal", () => {
+      map.getCanvas().style.cursor = "";
     });
     return () => map.remove();
   }, []);
@@ -172,9 +188,29 @@ export default function Dashboard() {
       {/* Map + Waterfall side by side */}
       <section style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr", gap: 16, padding: 16 }}>
         <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <b>Map — Hazard × Exposure = Loss (PMTiles 1973 tiles, 1MB)</b>
-            <span style={{ fontSize: 12, background: "#fef3c7", padding: "2px 8px", borderRadius: 4 }}>Click a dot → sector</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <select
+                value={activeSector}
+                onChange={(e) => {
+                  const s = e.target.value;
+                  setActiveSector(s);
+                  const center = sectorCenters[s];
+                  if (center && mapInstanceRef.current) {
+                    mapInstanceRef.current.flyTo({ center, zoom: 6.5, duration: 1200 });
+                  }
+                }}
+                style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, border: "1px solid #cbd5e1", background: "#fff" }}
+              >
+                {Object.keys(colors).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <span style={{ fontSize: 11, background: "#fef3c7", padding: "4px 8px", borderRadius: 4, whiteSpace: "nowrap" }}>Pick sector → fly + highlight</span>
+            </div>
           </div>
           <div ref={mapRef} style={{ height: 520 }} />
           <div style={{ padding: 10, fontSize: 12, color: "#475569", display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -218,15 +254,34 @@ export default function Dashboard() {
                   <XAxis type="number" unit=" cr" tick={{ fontSize: 11 }} />
                   <YAxis dataKey="sector" type="category" width={90} tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="total" radius={[0, 6, 6, 0]}>
+                  <Bar
+                    dataKey="total"
+                    radius={[0, 6, 6, 0]}
+                    onClick={(d: any) => {
+                      const s = d?.sector || d?.payload?.sector;
+                      if (s) {
+                        setActiveSector(s);
+                        const center = sectorCenters[s];
+                        if (center && mapInstanceRef.current) mapInstanceRef.current.flyTo({ center, zoom: 6.5, duration: 1000 });
+                      }
+                    }}
+                  >
                     {perSector.map((d) => (
-                      <Cell key={d.sector} fill={colors[d.sector]} />
+                      <Cell
+                        key={d.sector}
+                        fill={colors[d.sector]}
+                        stroke={d.sector === activeSector ? "#0f172a" : "none"}
+                        strokeWidth={d.sector === activeSector ? 2 : 0}
+                        style={{ cursor: "pointer" }}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>Active: <b>{activeSector}</b> — click map dot to highlight. Power/Steel = 2.6k of 6.4k total.</div>
+            <div style={{ fontSize: 11, color: "#64748b" }}>
+              Active: <b style={{ color: colors[activeSector] }}>{activeSector}</b> — click map dot <i>or</i> bar/dropdown. Power/Steel = 2.6k of 6.4k total.
+            </div>
           </div>
         </div>
       </section>
