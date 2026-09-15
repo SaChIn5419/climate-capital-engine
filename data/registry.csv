@@ -1,0 +1,12 @@
+component,source,license,access,resolution,format_in_repo,storage,credibility,confidence,qgis_ready,modern_replacement
+NGFS_PhaseV_longterm,NGFS IIASA Explorer Nov2024 + Feb2026 NACE/GICS/IEA mapping,Free public,https://data.ene.iiasa.ac.at/ngfs,Annual 2025-2100 xlsx/csv/API/pyam,parquet (polars),GeoParquet (time series),Very High,HIGH,yes,pyam→polars lazy
+NGFS_ShortTerm_v1.0,NGFS May2025 Highway/Diverging/Disasters/WakeUp,Free public,NGFS portal,Annual 2024-2030 sector+financial,parquet,parquet,Very High,HIGH,yes,pyam
+ERA5,Copernicus CDS ECMWF,CC-BY,cds.climate.copernicus.eu,0.25deg hourly 1940→,COG (rio-cogeo),COG,Very High,VERY HIGH,yes,COG+TiTiler+leafmap
+IBTrACS,NOAA NCEI v4.01,Public,https://www.ncei.noaa.gov/products/international-best-track-archive,3-hr 1840s→ NI basin SHP/CSV/netCDF,GeoParquet,GeoParquet,Very High,VERY HIGH,yes,parquet bbox pruning
+GHSL_POP_BUILT,JRC GHSL 2023/2025A,Free & open,human-settlement.emergency.copernicus.eu,100m-1km 1975-2030 GeoTIFF,COG / parquet,COG,Very High,VERY HIGH,yes,COG
+OSM_India,OpenStreetMap Geofabrik,ODbL,openstreetmap.in / geofabrik.de,Daily PBF/SHP minutely Overpass,GeoParquet,GeoParquet,Very High,VERY HIGH,yes,GeoParquet
+WRI_Aqueduct,WRI Aqueduct Floods Hazard 2020,CC-BY 3.0,datasets.wri.org,2-1000yr return 2030/50/80 inundation m,COG,COG,High,HIGH,yes,COG
+NRSC_FloodAtlas,ISRO NRSC Flood Affected Area Atlas 1998-2022,GODL-India,bhuvan.nrsc.gov.in / ndem.nrsc.gov.in,District/state 5-class hazard zonation,parquet (vectorized),GeoParquet,High,HIGH,yes,Bhuvan WMS→parquet trace
+BRSR,SEBI Top1000 FY22-23 + Core Top150 FY23-24,Public filings,NSE/SEBI XBRL,94-96% Scope1+2 43% Scope3 982 valid FY24-25,parquet (exposures),GeoParquet,Good,MODERATE-HIGH,yes,polars estimation layer ±CI
+CCTS,BEE / Grid Controller / CERC,Public (PIB Feb2026),beeindia.gov.in,Compliance 7-9 sectors + 8 offset methodologies CCC=1tCO2e,simulator,parquet (sim),Emerging,LOW (no price history),n/a,structural P=f(S/D/C)+MC
+LoanBook_Synthetic,Synthetic calibrated to RBI sector credit + BRSR + GHSL,N/A (synthetic),generated,10k exposures sector/lev/icr/geo/EAD/maturity,GeoParquet,GeoParquet,N/A (demo),N/A,yes,Synthetic transparent

@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.duckdb
+*.duckdb
+data/raw/
+data/curated/*.tif
+data/curated/*.pmtiles
+!data/curated/*_sample.*
+web/node_modules/
+web/.next/
+web/dist/
+.DS_Store
+.ipynb_checkpoints/
+.marimo/
+.env
