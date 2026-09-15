@@ -23,6 +23,9 @@ dependencies = [
   "scikit-learn>=1.5",
   "marimo>=0.13",
   "httpx>=0.27",
+  "mercantile>=1.2",
+  "mapbox-vector-tile>=2.2",
+  "pmtiles>=3.0",
 ]
 
 [project.optional-dependencies]

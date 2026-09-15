@@ -4,7 +4,9 @@ __pycache__/
 .duckdb
 *.duckdb
 data/raw/
+# keep curated demo COG/pmtiles small samples tracked, ignore large ones
 data/curated/*.tif
+!data/curated/flood_mumbai_cog.tif
 data/curated/*.pmtiles
 !data/curated/*_sample.*
 web/node_modules/
@@ -14,3 +16,6 @@ web/dist/
 .ipynb_checkpoints/
 .marimo/
 .env
+# allow web public demo tiles
+!web/public/data/loss.pmtiles
+!web/public/data/flood_mumbai_cog.tif
