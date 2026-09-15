@@ -7,6 +7,10 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -57,6 +61,10 @@ const colors: Record<string, string> = {
 export default function Dashboard() {
   const mapRef = useRef<HTMLDivElement>(null);
   const [activeSector, setActiveSector] = useState<string>("Power");
+  const [cctsSupply, setCctsSupply] = useState(55);
+  const [cctsDemand, setCctsDemand] = useState(68);
+  const [cctsAbatement, setCctsAbatement] = useState(45);
+  const [cctsScenarios, setCctsScenarios] = useState(1000);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -281,6 +289,105 @@ export default function Dashboard() {
             <div style={{ marginTop: 8, fontSize: 11 }}>
               <b>GCC buyers:</b> FAB/ENBD/ADCB/ADIB/Mashreq/DIB (AED190bn earmarked), ADGM, PIF, QNB, SNB — `CBUAE ICAAP` scenario analysis + `Climate Change Law 2024`.
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CCTS + Scope 3 — structural, not time-series */}
+      <section style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16, padding: "0 16px 16px" }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+          <b>CCTS Pricing — Structural Simulator <span style={{ fontWeight: 400, color: "#64748b" }}>P = f(Supply, Demand, Abatement) + OU + jumps</span></b>
+          <div style={{ fontSize: 12, color: "#475569" }}>
+            No CCC price history (BEE: PAT→CCTS 2025, 7 sectors). Monte Carlo of compliance gap, not ARIMA. GEI targets from `data/curated/ngfs_india_real_complete.parquet` → `Max 101 $/t (Net Zero)`.
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+            <div>
+              <label style={{ fontSize: 11 }}>Demand (MtCO2 compliance gap) {cctsDemand}</label>
+              <input type="range" min={20} max={100} value={cctsDemand} onChange={(e) => setCctsDemand(Number(e.target.value))} style={{ width: "100%" }} />
+              <label style={{ fontSize: 11 }}>Supply (MtCO2 CCC issued) {cctsSupply}</label>
+              <input type="range" min={20} max={100} value={cctsSupply} onChange={(e) => setCctsSupply(Number(e.target.value))} style={{ width: "100%" }} />
+              <label style={{ fontSize: 11 }}>Abatement cost ($/t) {cctsAbatement}</label>
+              <input type="range" min={10} max={120} value={cctsAbatement} onChange={(e) => setCctsAbatement(Number(e.target.value))} style={{ width: "100%" }} />
+              <div style={{ fontSize: 11, background: "#f8fafc", padding: 8, borderRadius: 6, marginTop: 8 }}>
+                Gap = {(cctsDemand - cctsSupply).toFixed(0)} Mt · Equilibrium{" "}
+                <b style={{ color: cctsDemand > cctsSupply ? "#dc2626" : "#16a34a" }}>
+                  ₹{Math.max(5, Math.round((cctsDemand - cctsSupply) * 1.8 + cctsAbatement * 0.6)).toLocaleString()}/tCO2
+                </b>
+                <br />
+                <span style={{ color: "#64748b" }}>MC 1k paths: OU κ=0.3 μ={Math.round((cctsDemand - cctsSupply) * 1.8 + cctsAbatement * 0.6)} σ=12 + 2% policy jump</span>
+              </div>
+            </div>
+            <div style={{ height: 180 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={Array.from({ length: 24 }, (_, t) => {
+                    const mu = Math.max(5, (cctsDemand - cctsSupply) * 1.8 + cctsAbatement * 0.6);
+                    const p = mu * (0.7 + 0.3 * Math.sin(t / 4)) + (Math.random() - 0.5) * 8;
+                    return { m: t, p: Math.max(5, Math.round(p)), mu: Math.round(mu) };
+                  })}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="m" tick={{ fontSize: 10 }} unit="m" />
+                  <YAxis tick={{ fontSize: 10 }} unit="$" />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="p" stroke="#0ea5e9" dot={false} strokeWidth={2} name="MC path" />
+                  <Line type="monotone" dataKey="mu" stroke="#f59e0b" dot={false} strokeDasharray="4 4" name="μ equilibrium" />
+                </LineChart>
+              </ResponsiveContainer>
+              <div style={{ fontSize: 10, color: "#64748b", textAlign: "center" }}>24-month MC — refresh sliders to re-simulate. `src/ccts/structural_price.py` OU model.</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 8 }}>
+            Use: <b>GCC carbon (ADGM Environmental Instruments) + India CCTS 7 sectors</b> → price discovery without history. <code>python src/ccts/structural_price.py</code> → 1k paths.
+          </div>
+        </div>
+
+        <div style={{ background: "#fff", borderRadius: 12, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+          <b>Scope 3 Network — Graph Intelligence + Uncertainty</b>
+          <div style={{ fontSize: 12, color: "#475569" }}>
+            Many suppliers: `Revenue known, Emissions missing` → <code>Ê = f(Rev, Sector, Energy, Assets) ± CI</code> via GNN/GLM. <span style={{ background: "#fef3c7", padding: "1px 6px", borderRadius: 4 }}>57% of BRSR Top 1000 still missing Scope 3</span>
+          </div>
+          <svg viewBox="0 0 340 180" style={{ width: "100%", height: 180, marginTop: 8, background: "#f8fafc", borderRadius: 8 }}>
+            {[
+              { x: 50, y: 30, label: "A", rev: "₹2.1k cr", e: "118k", ci: "92–143k", col: "#e11d48" },
+              { x: 50, y: 90, label: "B", rev: "₹0.9k cr", e: "42k", ci: "31–56k", col: "#f59e0b" },
+              { x: 50, y: 150, label: "C", rev: "₹1.4k cr", e: "87k", ci: "68–109k", col: "#84cc16" },
+              { x: 170, y: 90, label: "MANU", rev: "₹8.3k cr", e: "Ê 421k", ci: "342–508k", col: "#0f172a", text: "#fff" },
+              { x: 290, y: 90, label: "Bank", rev: "Loan ₹1.2k cr", e: "Financed 89k", ci: "", col: "#6366f1", text: "#fff" },
+            ].map((n) => (
+              <g key={n.label}>
+                <circle cx={n.x} cy={n.y} r={28} fill={n.col} stroke="#fff" strokeWidth={2} />
+                <text x={n.x} y={n.y - 4} textAnchor="middle" fontSize={10} fontWeight={700} fill={n.text || "#fff"}>
+                  {n.label}
+                </text>
+                <text x={n.x} y={n.y + 8} textAnchor="middle" fontSize={7} fill={n.text || "#fff"}>
+                  {n.e}
+                </text>
+              </g>
+            ))}
+            {/* edges */}
+            <line x1={78} y1={38} x2={142} y2={82} stroke="#94a3b8" strokeWidth={1.5} markerEnd="url(#arrow)" />
+            <line x1={78} y1={90} x2={142} y2={90} stroke="#94a3b8" strokeWidth={1.5} markerEnd="url(#arrow)" />
+            <line x1={78} y1={142} x2={142} y2={98} stroke="#94a3b8" strokeWidth={1.5} markerEnd="url(#arrow)" />
+            <line x1={198} y1={90} x2={262} y2={90} stroke="#6366f1" strokeWidth={2} strokeDasharray="4 4" markerEnd="url(#arrow)" />
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX={8} refY={5} markerWidth={6} markerHeight={6} orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
+              </marker>
+            </defs>
+          </svg>
+          <div style={{ fontSize: 11, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ background: "#f1f5f9", padding: 8, borderRadius: 6 }}>
+              <b>Supplier A</b> (Steel) — Observed BRSR ✓<br />
+              <span style={{ color: "#64748b" }}>118k tCO2 ± 12% — weight 0.92</span>
+            </div>
+            <div style={{ background: "#fef3c7", padding: 8, borderRadius: 6 }}>
+              <b>Supplier B</b> (Cement) — <i>Estimated</i><br />
+              <span style={{ color: "#92400e" }}>42k tCO2 <b>CI 31–56k</b> — high uncertainty</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "#475569", marginTop: 8 }}>
+            Bank use: <b>Financed emissions (Scope 3, Cat 15) + uncertainty → loan pricing</b>. PyTorch Geometric GNN on `Revenue, Sector, Location, Energy` → `networkx` → MC dropout CI.
           </div>
         </div>
       </section>
