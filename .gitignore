@@ -21,3 +21,10 @@ web/dist/
 !web/public/data/loss.pmtiles
 !web/public/data/flood_mumbai_cog.tif
 !web/public/data/era5*.tif
+
+# secrets — never commit (CDS key is at ~/.cdsapirc outside repo, but block if copied)
+.cdsapirc
+.env
+.env.*
+*.key
+*.pem
