@@ -26,6 +26,7 @@ dependencies = [
   "mercantile>=1.2",
   "mapbox-vector-tile>=2.2",
   "pmtiles>=3.0",
+  "cdsapi>=0.7.7",
 ]
 
 [project.optional-dependencies]
