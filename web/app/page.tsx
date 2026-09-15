@@ -107,7 +107,7 @@ export default function Dashboard() {
             source: "lossReal",
             "source-layer": "loss",
             paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 5, 10, 12],
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 5, 8, 10, 14],
               "circle-color": [
                 "match",
                 ["get", "sector"],
@@ -125,9 +125,9 @@ export default function Dashboard() {
                 "#14b8a6",
                 /* default Other */ "#a78bfa",
               ],
-              "circle-opacity": 0.85,
+              "circle-opacity": 1,
               "circle-stroke-width": 2,
-              "circle-stroke-color": "#fff",
+              "circle-stroke-color": "#0f172a",
             },
           },
         ],
